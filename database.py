@@ -19,7 +19,7 @@ class Database:
     def __init__(self):
         self.database = sql.connect(self.filename)
         self.execute(create_table("players", (
-            Field("ID", "int primary key"),
+            Field("ID", "int primary key auto increment"),
             Field("nickname", "text"),
             Field("squad_rank", "int"),
             Field("team_id", "int"),
@@ -27,12 +27,12 @@ class Database:
         )))
 
         self.execute(create_table("teams", (
-            Field("ID", "int primary key"),
+            Field("ID", "int primary key auto increment"),
             Field("name", "text"),
         )))
         
         self.execute(create_table("matches", (
-            Field("ID", "int primary key"),
+            Field("ID", "int primary key auto increment"),
             Field("datetime", "datetime"),
             Field("mvp", "int"),
             Field("winning_team", "int"),
@@ -40,7 +40,7 @@ class Database:
         )))
 
         self.execute(create_table("stats", (
-            Field("ID", "int primary key"),
+            Field("ID", "int primary key auto increment"),
             Field("team_id", "int"),
             Field("match_id", "int"),
             Field("kills", "int"),
@@ -49,3 +49,25 @@ class Database:
     def execute(self, command):
         self.database.execute(command)
         self.database.commit()
+
+    def add_team(self, name):
+        self.execute(f"insert into teams values('{name}');") 
+    
+    def get_team_id(self, name):
+        cursor = self.database.cursor()
+        cursor.execute(f"select id from teams where name='{name}';")
+        return int(cursor.fetchall()[0])
+
+    def add_player(self, nickname, squad_rank, team_id, real_name):
+        self.execute(f"insert into players values('{nickname}', {squad_rank}, {team_id}, '{real_name}');")
+
+    def add_stats(self, team_id, match_id, kills):
+        self.execute(f"insert into stats values({team_id}, {match_id}, {kills});")
+
+    def add_match(self, datetime, mvp, winning_team, map):
+        self.execute(f"insert into matches values('{datetime}', {mvp}, {winning_team}, '{map}')")
+
+    def get_players_from_team(self, team_id):
+        cursor = self.database.cursor()
+        cursor.execute(f"select id from players where team_id={team_id};")
+        return [int(x) for x in cursor.fetchall()]
